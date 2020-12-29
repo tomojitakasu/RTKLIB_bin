@@ -16,15 +16,23 @@ var marks = [];
 var markh = null;
 var markz = 0;
 var info = null;
-var icon0="http://maps.google.co.jp/mapfiles/ms/icons/red-dot.png";
-var icon1="http://maps.google.co.jp/mapfiles/ms/icons/yellow-dot.png";
+//var icon0="http://maps.google.co.jp/mapfiles/ms/icons/yellow-dot.png";
+//var icon1="http://maps.google.co.jp/mapfiles/ms/icons/red-dot.png";
+var icon0="image/marker_yellow.png";
+var icon1="image/marker_red.png";
 
 function init() {
     var opt = {
         center: new google.maps.LatLng(0,0),
-        zoom: 2, minZoom: 2,
+        zoom: 12, minZoom: 2,
+        mapTypeControlOptions: {
+            position: google.maps.ControlPosition.TOP_RIGHT,
+        },
         streetViewControl: false,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
+        fullscreenControl: false,
+        scaleControl: true,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        tilt: 0,
     };
     map = new google.maps.Map(document.getElementById("map"),opt);
     document.getElementById('state').value='1';
@@ -41,9 +49,14 @@ function SetCent(lat,lon) {
     map.setCenter(new google.maps.LatLng(lat,lon));
 }
 
-function SetZoom(zoom) {
+function ZoomIn() {
     if (map == null) return;
-    map.setZoom(zoom);
+    map.setZoom(map.getZoom()+1);
+}
+
+function ZoomOut() {
+    if (map == null) return;
+    map.setZoom(map.getZoom()-1);
 }
 
 function ClearMark(lat,lon,title) {
@@ -56,9 +69,9 @@ function ClearMark(lat,lon,title) {
 
 function AddMark(lat,lon,title,msg) {
     var pos = new google.maps.LatLng(lat,lon);
-    var opt = {map: map, position: pos, title: title, icon: icon1};
+    var opt = {map: map, position: pos, title: title, icon: icon0};
     var mark = new google.maps.Marker(opt);
-    if (title == "SOL2") mark.setIcon(icon0);
+    if (title == "SOL2") mark.setIcon(icon1);
     google.maps.event.addListener(mark,'click',function(event) {
         if (info) {info.close();}
         info = new google.maps.InfoWindow({content: msg});

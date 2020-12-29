@@ -1,72 +1,76 @@
 <!------------------------------------------------------------------------------
-* rtklib_gmap.htm: rtklib google map view
+* rtklib_gmap.htm: rtklib map view
 *
 * history: 2013/01/20 1.0  new
+*          2020/11/30 1.1  use leaflet and OSM (OpenStreetMap)
 *------------------------------------------------------------------------------>
 <html>
 <head>
 <title>RTKLIB_GM</title>
 
-<script src="http://maps.google.com/maps/api/js?v=3&sensor=false"
-    type="text/javascript" charset="UTF-8"></script>
-<script type="text/javascript">
+<meta charset=UTF-8">
+<link rel="stylesheet" href="leaflet/leaflet.css" />
+<script src="leaflet/leaflet.js"></script>
 
-var map = null;
+<script>
+
+var map;
 var marks = [];
-var markh = null;
-var markz = 0;
-var info = null;
-var icon0="http://maps.google.co.jp/mapfiles/ms/icons/red-dot.png";
-var icon1="http://maps.google.co.jp/mapfiles/ms/icons/yellow-dot.png";
+var titles = [];
+var LeafIcon = L.Icon.extend({
+    options: {
+        shadowUrl: 'leaflet/images/marker-shadow.png',
+        shadowSize: [41, 41],
+        shadowAnchor: [10, 41],
+        iconSize: [25, 41],
+        iconAnchor: [10, 41],
+        popupAnchor: [3, -40]
+    }
+});
+var icon0 = new LeafIcon({iconUrl: 'image/marker_yellow.png'});
+var icon1 = new LeafIcon({iconUrl: 'image/marker_red.png'});
+
+var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: "&copy; <a href='https://osm.org/copyright' target='_blank'>OpenStreetMap</a> contributors"
+});
 
 function init() {
-    var opt = {
-        center: new google.maps.LatLng(0,0),
-        zoom: 2, minZoom: 2,
-        streetViewControl: false,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
-    map = new google.maps.Map(document.getElementById("map"),opt);
+    map = L.map('map');
+    osm.addTo(map);
+    map.zoomControl.setPosition('bottomright');
+    map.setView([0,0],2);
     document.getElementById('state').value='1';
 }
 
 function ShowHome() {
-    if (map == null) return;
-    map.setCenter(new google.maps.LatLng(0,0));
-    map.setZoom(2);
+    map.setView([0,0],2);
 }
 
-function ClearMark(lat,lon,title) {
+function ClearMark() {
     for (var i in marks) {
-        marks[i].setMap(null);
+        marks[i].remove();
     }
-    marks.length = 0;
-    markh = null;
+    marks = [];
+    titles = [];
 }
 
 function AddMark(lat,lon,title,msg) {
-    var pos = new google.maps.LatLng(lat,lon);
-    var opt = {map: map, position: pos, title: title, icon: icon1};
-    var mark = new google.maps.Marker(opt);
-    google.maps.event.addListener(mark,'click',function(event) {
-        if (info) {info.close();}
-        info = new google.maps.InfoWindow({content: msg});
-        info.open(mark.getMap(),mark);
-    });
+    var mark = L.marker([lat,lon],{icon: icon0, opacity: 0.8}).addTo(map);
+    var popup = L.popup().setContent(msg);
+    mark.bindPopup(popup);
     marks.push(mark);
+    titles.push(title);
 }
 
 function HighlightMark(title) {
-    if (markh) {
-        markh.setIcon(icon1);
-        markh.setZIndex(markz);
-    }
     for (var i in marks) {
-        if (marks[i].getTitle()==title) {
-            markz = marks[i].getZIndex();
+        if (titles[i] == title) {
+            marks[i].setIcon(icon1);
+            marks[i].setOpacity(1.0);
+        }
+        else {
             marks[i].setIcon(icon0);
-            marks[i].setZIndex(google.maps.Marker.MAX_ZINDEX+1);
-            markh=marks[i];
+            marks[i].setOpacity(0.8);
         }
     }
 }
